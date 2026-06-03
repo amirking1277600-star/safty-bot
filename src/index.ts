@@ -1,38 +1,30 @@
-import {
-  Client, GatewayIntentBits, REST, Routes, Events, SlashCommandBuilder, 
-  ChatInputCommandInteraction, EmbedBuilder, TextChannel, ButtonBuilder, 
-  ButtonStyle, ActionRowBuilder, ButtonInteraction, PermissionFlagsBits
-} from "discord.js";
-import fs from "node:fs";
-import path from "node:path";
-
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
-});
-
-const DISCORD_TOKEN = process.env["DISCORD_TOKEN"];
-const commands = [
-  new SlashCommandBuilder().setName("ping").setDescription("🏓 Check bot latency"),
-  new SlashCommandBuilder().setName("features").setDescription("✨ See bot features")
-].map(c => c.toJSON());
+// انسخ كل ده وحطه في index.ts مكان الكود الجديد اللي جربناه
+// (هنا حط كل الـ imports والـ functions والـ commands اللي كنت بعتها قبل كدة)
+// ...
+// وبعد ما تحطهم، ضيف في آخر الملف الجزء ده عشان يربط كل الأوامر:
 
 client.once(Events.ClientReady, async (c) => {
-  console.log(`✅ SaftyBot is online as ${c.user.tag}`);
-  const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN!);
-  try {
+    BOT_OWNER_ID = c.user.id;
+    console.log(`✅ SaftyBot is online! Logged in as ${c.user.tag}`);
+    const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN!);
     await rest.put(Routes.applicationCommands(c.user.id), { body: commands });
-    console.log('🚀 Commands registered!');
-  } catch (e) { console.error(e); }
+    setInterval(() => checkSubscriptionExpiry(client), 60 * 60 * 1000);
 });
 
 client.on(Events.InteractionCreate, async (i) => {
-  if (!i.isChatInputCommand()) return;
-  
-  if (i.commandName === 'ping') {
-    await i.reply({ content: `🏓 Pong! Latency is ${client.ws.ping}ms`, ephemeral: true });
-  } else if (i.commandName === 'features') {
-    await i.reply({ content: '✨ SaftyBot is ready to protect your server!', ephemeral: true });
-  }
+    if (i.isButton()) return handleSubscriptionButton(i, client);
+    if (!i.isChatInputCommand()) return;
+
+    const cmdName = i.commandName;
+    const handlerName = `handle${cmdName.charAt(0).toUpperCase() + cmdName.slice(1)}`;
+    const handler = (global as any)[handlerName];
+
+    if (typeof handler === 'function') {
+        try { await handler(i); } 
+        catch (error) { console.error(error); }
+    } else {
+        await i.reply({ content: '⚠️ Command under development.', ephemeral: true });
+    }
 });
 
 client.login(DISCORD_TOKEN);
