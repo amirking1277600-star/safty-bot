@@ -1,6 +1,7 @@
 {
   "name": "safty-bot",
   "version": "1.0.0",
+  "type": "module",
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts"
