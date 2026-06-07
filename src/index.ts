@@ -17,18 +17,33 @@ client.once(Events.ClientReady, (c) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  // دي أهم خطوة: لو مش ChatInput (أمر) اخرج فوراً
   if (!interaction.isChatInputCommand()) return;
 
-  try {
-    // deferReply is essential to prevent "The application did not respond"
-    await interaction.deferReply({ ephemeral: false });
-  } catch (err) {
-    console.error("Defer error:", err);
-  }
-});
+  // 1. دي اللي بتوقف رسالة الـ "is thinking..." وتعرف ديسكورد إننا بنحضر الرد
+  await interaction.deferReply({ ephemeral: false }).catch(() => {});
 
-process.on('unhandledRejection', (reason) => {
-  console.error('❌ Unhandled Rejection:', reason);
+  try {
+    // 2. هنا الـ Logic بتاعك: بدل ما نكتب كل أمر، هنعمل Switch عشان يغطي الكل
+    switch (interaction.commandName) {
+      case 'subscribe':
+        await interaction.editReply('✅ Subscribed successfully!');
+        break;
+      case 'features':
+        await interaction.editReply('✨ Current features: Auto-Mod, Welcome, and more!');
+        break;
+      // ضيف هنا أي أمر تاني عندك، مثلاً:
+      // case 'ping':
+      //   await interaction.editReply('Pong!');
+      //   break;
+      default:
+        await interaction.editReply('❓ This command is not implemented yet.');
+        break;
+    }
+  } catch (err) {
+    console.error("Execution error:", err);
+    await interaction.editReply('❌ Error executing this command.').catch(() => {});
+  }
 });
 
 if (!DISCORD_TOKEN) {
