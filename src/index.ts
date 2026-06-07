@@ -1,48 +1,44 @@
-import { Client, GatewayIntentBits, Partials, Events, Collection } from "discord.js";
+import { Client, GatewayIntentBits, Partials, Events, Interaction } from "discord.js";
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ],
-  partials: [Partials.Channel, Partials.Message, Partials.GuildMember]
-});
-
-// هنا بنخزن الأوامر عشان نعرف نشغلها
-(client as any).commands = new Collection();
+// استيراد الـ Client وكل الـ Functions اللي إنت كاتبها (لازم تتأكد إنك مصدّرها من ملف الكود بتاعك)
+// بفرض إن الكود بتاعك اسمه bot.ts
+import { client, handleSubscriptionButton } from "./bot.js"; 
 
 client.once(Events.ClientReady, (c) => {
   console.log(`✅ Logged in as: ${c.user.tag}`);
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+  // 1. التعامل مع الأزرار (Subscription System)
+  if (interaction.isButton()) {
+    await handleSubscriptionButton(interaction as any, client);
+    return;
+  }
+
+  // 2. التعامل مع الأوامر (Slash Commands)
   if (!interaction.isChatInputCommand()) return;
 
-  // ده اللي بيخلي البوت ميعلقش
   await interaction.deferReply({ ephemeral: false }).catch(() => {});
 
   try {
-    // توزيع الأوامر: كل أمر هينفذ الـ Function الخاص بيه
-    // أنا ربطت لك الأوامر الأساسية عشان تبدأ
+    // هنا بنشغل الـ Functions اللي إنت كاتبها بناءً على اسم الأمر
     switch (interaction.commandName) {
       case 'ping':
-        await interaction.editReply(`🏓 Pong! API Latency: ${Math.round(interaction.client.ws.ping)}ms`);
+        await handlePing(interaction as any);
         break;
-        
       case 'features':
-        await interaction.editReply('✨ SaftyBot is active! Use /help to see all commands.');
+        await handleFeatures(interaction as any);
         break;
-
+      case 'help':
+        await handleHelp(interaction as any);
+        break;
+      // ضيف باقي الـ 50 أمر بنفس الطريقة، أو استدعيها من ملفات تانية
       default:
-        // أي أمر تاني لسه ما ضفتش الـ logic بتاعه
-        await interaction.editReply(`🔧 The command **/${interaction.commandName}** is active but logic needs to be attached.`);
-        break;
+        await interaction.editReply("🛠️ This command is registered but the handler is not linked yet.");
     }
   } catch (err) {
-    console.error("Command Error:", err);
-    await interaction.editReply('❌ Error executing this command.');
+    console.error("Execution error:", err);
+    await interaction.editReply("❌ Error executing command.").catch(() => {});
   }
 });
 
