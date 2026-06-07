@@ -1,48 +1,29 @@
-import {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Events,
-  ButtonInteraction,
-} from "discord.js";
-
-// Import local modules with .js extension for TS/Node compatibility
-import { logger } from "./lib/logger.js";
-// Assuming you moved the main logic to a file named 'bot.ts'
-import { client, handleSubscriptionButton } from "./bot.js"; 
+import { Client, GatewayIntentBits, Partials, Events } from "discord.js";
 
 const DISCORD_TOKEN = process.env["DISCORD_TOKEN"];
 
-// ─── Event Handling ──────────────────────────────────────────────────────────
-client.on(Events.ClientReady, (c) => {
-  logger.info(`✅ [SUCCESS] Logged in as ${c.user.tag}`);
-  console.log(`🚀 [STATUS] Bot is now Online!`);
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+  ],
+  partials: [Partials.Channel, Partials.Message, Partials.GuildMember]
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isButton()) {
-    try {
-      await handleSubscriptionButton(interaction as ButtonInteraction, client);
-    } catch (err) {
-      logger.error({ err }, "Error handling button interaction");
-    }
-  }
+client.once(Events.ClientReady, (c) => {
+  console.log(`✅ Logged in as: ${c.user.tag}`);
 });
 
-// ─── Error Handling ──────────────────────────────────────────────────────────
 process.on('unhandledRejection', (reason) => {
-  logger.error({ reason }, 'Unhandled Rejection');
+  console.error('❌ Unhandled Rejection:', reason);
 });
 
-process.on('uncaughtException', (err) => {
-  logger.error({ err }, 'Uncaught Exception');
-});
-
-// ─── Start ───────────────────────────────────────────────────────────────────
 if (!DISCORD_TOKEN) {
-  logger.error("[CRITICAL] DISCORD_TOKEN is missing!");
+  console.error("❌ Error: DISCORD_TOKEN is missing from environment variables!");
 } else {
-  client.login(DISCORD_TOKEN.trim()).catch(err => {
-    logger.error("[CRITICAL] Login failed:", err);
+  client.login(DISCORD_TOKEN.trim()).catch((err) => {
+    console.error("❌ Login failed. Please check your token:", err);
   });
 }
