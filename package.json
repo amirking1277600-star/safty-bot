@@ -2,7 +2,6 @@
   "name": "saftybot",
   "version": "1.0.0",
   "description": "SaftyBot — Discord moderation and protection bot",
-  "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "tsx --watch src/index.ts",
