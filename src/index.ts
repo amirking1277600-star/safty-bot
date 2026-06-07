@@ -1,6 +1,4 @@
-import { Client, GatewayIntentBits, Partials, Events } from "discord.js";
-
-const DISCORD_TOKEN = process.env["DISCORD_TOKEN"];
+import { Client, GatewayIntentBits, Partials, Events, Collection } from "discord.js";
 
 const client = new Client({
   intents: [
@@ -12,44 +10,40 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.GuildMember]
 });
 
+// هنا بنخزن الأوامر عشان نعرف نشغلها
+(client as any).commands = new Collection();
+
 client.once(Events.ClientReady, (c) => {
   console.log(`✅ Logged in as: ${c.user.tag}`);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  // دي أهم خطوة: لو مش ChatInput (أمر) اخرج فوراً
   if (!interaction.isChatInputCommand()) return;
 
-  // 1. دي اللي بتوقف رسالة الـ "is thinking..." وتعرف ديسكورد إننا بنحضر الرد
+  // ده اللي بيخلي البوت ميعلقش
   await interaction.deferReply({ ephemeral: false }).catch(() => {});
 
   try {
-    // 2. هنا الـ Logic بتاعك: بدل ما نكتب كل أمر، هنعمل Switch عشان يغطي الكل
+    // توزيع الأوامر: كل أمر هينفذ الـ Function الخاص بيه
+    // أنا ربطت لك الأوامر الأساسية عشان تبدأ
     switch (interaction.commandName) {
-      case 'subscribe':
-        await interaction.editReply('✅ Subscribed successfully!');
+      case 'ping':
+        await interaction.editReply(`🏓 Pong! API Latency: ${Math.round(interaction.client.ws.ping)}ms`);
         break;
+        
       case 'features':
-        await interaction.editReply('✨ Current features: Auto-Mod, Welcome, and more!');
+        await interaction.editReply('✨ SaftyBot is active! Use /help to see all commands.');
         break;
-      // ضيف هنا أي أمر تاني عندك، مثلاً:
-      // case 'ping':
-      //   await interaction.editReply('Pong!');
-      //   break;
+
       default:
-        await interaction.editReply('❓ This command is not implemented yet.');
+        // أي أمر تاني لسه ما ضفتش الـ logic بتاعه
+        await interaction.editReply(`🔧 The command **/${interaction.commandName}** is active but logic needs to be attached.`);
         break;
     }
   } catch (err) {
-    console.error("Execution error:", err);
-    await interaction.editReply('❌ Error executing this command.').catch(() => {});
+    console.error("Command Error:", err);
+    await interaction.editReply('❌ Error executing this command.');
   }
 });
 
-if (!DISCORD_TOKEN) {
-  console.error("❌ Error: DISCORD_TOKEN is missing!");
-} else {
-  client.login(DISCORD_TOKEN.trim()).catch((err) => {
-    console.error("❌ Login failed:", err);
-  });
-}
+client.login(process.env["DISCORD_TOKEN"]);
