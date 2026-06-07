@@ -1,45 +1,43 @@
-import { Client, GatewayIntentBits, Partials, Events, Interaction } from "discord.js";
+import pkg from "discord.js";
+const { Client, GatewayIntentBits, Partials, Events, Collection } = pkg;
+import { logger } from "./lib/logger.js"; // ده المسار الصح جوه src
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-// استيراد الـ Client وكل الـ Functions اللي إنت كاتبها (لازم تتأكد إنك مصدّرها من ملف الكود بتاعك)
-// بفرض إن الكود بتاعك اسمه bot.ts
-import { client, handleSubscriptionButton } from "./bot.js"; 
-
-client.once(Events.ClientReady, (c) => {
-  console.log(`✅ Logged in as: ${c.user.tag}`);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+    partials: [Partials.Channel, Partials.Message]
 });
 
-client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-  // 1. التعامل مع الأزرار (Subscription System)
-  if (interaction.isButton()) {
-    await handleSubscriptionButton(interaction as any, client);
-    return;
-  }
+(client as any).commands = new Collection();
 
-  // 2. التعامل مع الأوامر (Slash Commands)
-  if (!interaction.isChatInputCommand()) return;
+// ده الجزء اللي بيقرأ الـ 50 أمر أوتوماتيك
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 
-  await interaction.deferReply({ ephemeral: false }).catch(() => {});
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = await import(filePath);
+    (client as any).commands.set(command.data.name, command);
+}
 
-  try {
-    // هنا بنشغل الـ Functions اللي إنت كاتبها بناءً على اسم الأمر
-    switch (interaction.commandName) {
-      case 'ping':
-        await handlePing(interaction as any);
-        break;
-      case 'features':
-        await handleFeatures(interaction as any);
-        break;
-      case 'help':
-        await handleHelp(interaction as any);
-        break;
-      // ضيف باقي الـ 50 أمر بنفس الطريقة، أو استدعيها من ملفات تانية
-      default:
-        await interaction.editReply("🛠️ This command is registered but the handler is not linked yet.");
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    // ده عشان يفضل البوت "Alive" وما يقطعش الاتصال
+    await interaction.deferReply({ ephemeral: false }).catch(() => {});
+
+    const command = (client as any).commands.get(interaction.commandName);
+    if (!command) return;
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        logger.error(error, "Error executing command");
+        await interaction.editReply("❌ حصل مشكلة يا صاحبي، جرب تاني.").catch(() => {});
     }
-  } catch (err) {
-    console.error("Execution error:", err);
-    await interaction.editReply("❌ Error executing command.").catch(() => {});
-  }
 });
 
 client.login(process.env["DISCORD_TOKEN"]);
