@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Partials, Events, Interaction as DiscordInteraction } from "discord.js";
+const { Client, GatewayIntentBits, Partials, Events } = require("discord.js");
 
 const DISCORD_TOKEN = process.env["DISCORD_TOKEN"];
 
@@ -12,15 +12,19 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.GuildMember]
 });
 
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, (c: any) => {
   console.log(`✅ Logged in as: ${c.user.tag}`);
 });
 
-client.on(Events.InteractionCreate, async (interaction: DiscordInteraction) => {
+client.on(Events.InteractionCreate, async (interaction: any) => {
   if (!interaction.isChatInputCommand()) return;
 
-  // Defer reply to prevent "The application did not respond" error
-  await interaction.deferReply({ ephemeral: false }).catch(() => {});
+  // ده الحل النهائي لـ The application did not respond
+  try {
+    await interaction.deferReply({ ephemeral: false });
+  } catch (err) {
+    console.error("Defer error:", err);
+  }
 });
 
 process.on('unhandledRejection', (reason) => {
@@ -30,7 +34,7 @@ process.on('unhandledRejection', (reason) => {
 if (!DISCORD_TOKEN) {
   console.error("❌ Error: DISCORD_TOKEN is missing!");
 } else {
-  client.login(DISCORD_TOKEN.trim()).catch((err) => {
+  client.login(DISCORD_TOKEN.trim()).catch((err: any) => {
     console.error("❌ Login failed:", err);
   });
 }
