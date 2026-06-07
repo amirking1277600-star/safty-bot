@@ -1,15 +1,6 @@
-import pino from "pino";
+ export const logger = {
+  info: (msg: any) => console.log(`[INFO] ${msg}`),
+  error: (err: any, msg: string) => console.error(`[ERROR] ${msg}`, err),
+  warn: (msg: any) => console.warn(`[WARN] ${msg}`)
+}; 
 
-const isProduction = process.env["NODE_ENV"] === "production";
-
-export const logger = pino({
-  level: process.env["LOG_LEVEL"] ?? "info",
-  ...(isProduction
-    ? {}
-    : {
-        transport: {
-          target: "pino-pretty",
-          options: { colorize: true },
-        },
-      }),
-});
