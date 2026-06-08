@@ -1,16 +1,21 @@
 {
-  "name": "safty-bot",
+  "name": "saftybot",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "description": "SaftyBot — Discord moderation and protection bot",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node -r tsx/cjs src/index.ts"
   },
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "discord.js": "^14.18.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "tsx": "^4.19.3"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
