@@ -1,28 +1,24 @@
-import { Client, GatewayIntentBits, Partials, Events } from "discord.js";
-import { logger } from "./lib/logger"; 
+if (command === 'post') {
+    // 1. يبعتلك في الخاص
+    const dmChannel = await message.author.createDM();
+    await dmChannel.send("📥 **Admin Mode:** Please send the image or file you wish to post.");
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ],
-  partials: [Partials.Channel, Partials.Message, Partials.GuildMember]
-});
+    // 2. يستنى الرد
+    const filter = (m: Message) => m.author.id === message.author.id && m.attachments.size > 0;
+    const collector = dmChannel.createMessageCollector({ filter, max: 1, time: 60000 });
 
-// هنا كنت حاطط الـ Logic بتاعك.. كمل عليه عادي
-client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
-
-    // ده سطر "الحماية" اللي هيخلي البوت ميهنجش
-    await interaction.deferReply({ ephemeral: false }).catch(() => {});
-
-    // حط هنا الـ Logic بتاع الـ 50 أمر بتوعك زي ما كنت عاملهم بالظبط
-    // مثال:
-    if (interaction.commandName === 'ping') {
-        await interaction.editReply("🏓 Pong!");
-    }
-});
-
-client.login(process.env["DISCORD_TOKEN"]);
+    collector.on('collect', async (m) => {
+        const attachment = m.attachments.first();
+        
+        // 3. يبعتها في الروم المحددة
+        const targetChannel = client.channels.cache.get('1512125669482565702') as TextChannel;
+        if (targetChannel) {
+            await targetChannel.send({
+                content: "📢 **New Post:**",
+                files: [attachment!.url]
+            });
+            // 4. تأكيد النشر في الخاص
+            await m.reply("✅ **Success:** Your file has been posted successfully.");
+        }
+    });
+}
