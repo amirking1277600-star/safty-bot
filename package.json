@@ -1,7 +1,6 @@
 {
   "name": "saftybot",
   "version": "1.0.0",
-  "description": "SaftyBot — Discord moderation and protection bot",
   "scripts": {
     "start": "node -r tsx/cjs src/index.ts"
   },
@@ -15,7 +14,5 @@
     "@types/node": "^22.15.0",
     "typescript": "^5.8.3"
   },
-  "engines": {
-    "node": ">=20"
-  }
+  "engines": { "node": ">=20" }
 }
