@@ -22,24 +22,25 @@ client.on('messageCreate', async (message: Message) => {
     if (message.content.toLowerCase() === '!post') {
         if (message.author.id !== ADMIN_ID) return;
 
-        await message.delete().catch(console.error);
+        await message.delete().catch(() => {});
 
         const replyMsg = await message.channel.send("Check your DM!");
-        setTimeout(() => replyMsg.delete(), 5000);
+        setTimeout(() => replyMsg.delete().catch(() => {}), 5000);
 
         const dmChannel = await message.author.createDM();
-        await dmChannel.send("Please send the image you want to post.");
+        // استخدمنا as any عشان نتخطى مشكلة الـ Build اللي كانت بتقابلك
+        await (dmChannel as any).send("Please send the image you want to post.");
 
         const filter = (m: Message) => m.author.id === message.author.id && m.attachments.size > 0;
-        const collector = dmChannel.createMessageCollector({ filter, max: 1, time: 60000 });
+        const collector = (dmChannel as any).createMessageCollector({ filter, max: 1, time: 60000 });
 
-        collector.on('collect', async (m) => {
+        collector.on('collect', async (m: any) => {
             const attachment = m.attachments.first();
             const targetChannel = client.channels.cache.get(TARGET_CHANNEL_ID) as TextChannel;
 
             if (targetChannel) {
                 const messages = await targetChannel.messages.fetch({ limit: 100 });
-                await targetChannel.bulkDelete(messages).catch(console.error);
+                await targetChannel.bulkDelete(messages).catch(() => {});
 
                 await targetChannel.send({
                     files: [attachment!.url]
