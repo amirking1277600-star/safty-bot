@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits } from 'discord.js';
-import { keepAlive } from './lib/keep_alive';
+import { keepAlive } from './lib/keep_alive.js';
 
 const client = new Client({ 
     intents: [
@@ -9,8 +9,8 @@ const client = new Client({
     ] 
 });
 
-const channelSettings = new Map();
-const messageCounters = new Map();
+const channelSettings = new Map<string, { count: number }>();
+const messageCounters = new Map<string, number>();
 
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -18,7 +18,7 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
 
     if (interaction.commandName === 'setcount') {
-        const count = interaction.options.getInteger('number');
+        const count = interaction.options.getInteger('number') || 10;
         channelSettings.set(interaction.channelId, { count });
         await interaction.editReply(`Count set to: ${count}`);
     } 
@@ -30,12 +30,12 @@ client.on('messageCreate', async (message) => {
     const config = channelSettings.get(message.channelId);
     if (!config) return;
 
-    const count = (messageCounters.get(message.channelId) || 0) + 1;
-    if (count >= config.count) {
-        await message.channel.send("Message limit reached!");
+    const currentCount = (messageCounters.get(message.channelId) || 0) + 1;
+    if (currentCount >= config.count) {
+        await message.channel.send("Limit reached!");
         messageCounters.set(message.channelId, 0);
     } else {
-        messageCounters.set(message.channelId, count);
+        messageCounters.set(message.channelId, currentCount);
     }
 });
 
