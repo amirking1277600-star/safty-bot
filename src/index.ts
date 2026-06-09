@@ -1,5 +1,5 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const keep_alive = require('./keep_alive');
+import { Client, GatewayIntentBits } from 'discord.js';
+import { keepAlive } from './keep_alive.js'; // Note the .js extension
 
 const client = new Client({ 
     intents: [
@@ -15,7 +15,6 @@ let messageCounters = {};
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
-    // Prevents "The application did not respond"
     await interaction.deferReply({ ephemeral: false });
 
     if (interaction.commandName === 'setcount') {
@@ -44,7 +43,6 @@ client.on('messageCreate', async message => {
     }
 });
 
-keep_alive();
+keepAlive();
 
-// DISCORD_TOKEN is retrieved from Replit Secrets
 client.login(process.env.DISCORD_TOKEN);
