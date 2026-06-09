@@ -2,7 +2,7 @@ import express from 'express';
 const app = express();
 
 app.get('/', (req, res) => {
-    res.send('Server is active');
+    res.send('Bot is active');
 });
 
 export function keepAlive() {
