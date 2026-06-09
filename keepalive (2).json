@@ -1,13 +1,12 @@
 import express from 'express';
 const app = express();
-const port = 8080;
 
 app.get('/', (req, res) => {
-  res.send('I am alive!');
+    res.send('Bot is active and running 24/7');
 });
 
 export function keepAlive() {
-  app.listen(port, () => {
-    console.log(`Keep-alive server is ready on port ${port}`);
-  });
+    app.listen(3000, () => {
+        console.log('Keep-alive server is running on port 3000');
+    });
 }
